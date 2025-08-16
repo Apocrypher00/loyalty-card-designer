@@ -1,0 +1,32 @@
+This project includes the following third-party libraries:
+
+1) JsBarcode (MIT License)
+   Copyright (c) Authors as listed in the JsBarcode repository.
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction, including without limitation the rights
+   to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+   copies of the Software, and to permit persons to whom the Software is
+   furnished to do so, subject to the following conditions:
+   The above copyright notice and this permission notice shall be included in
+   all copies or substantial portions of the Software.
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND...
+
+2) qrcode (MIT License)
+   Copyright (c) Authors as listed in the qrcode repository.
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction...
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND...
+
+3) jsPDF (MIT License)
+   Copyright (c) 2010-2024 James Hall, https://parall.ax/
+   Permission is hereby granted, free of charge, to any person obtaining a copy
+   of this software and associated documentation files (the "Software"), to deal
+   in the Software without restriction...
+   THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND...
+
+Notes:
+- These libraries are loaded from public CDNs at runtime.
+- Keep this notice file in your repository to satisfy attribution.
+- If you pin other versions or add libraries, include their licenses here.
