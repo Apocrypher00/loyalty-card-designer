@@ -25,6 +25,7 @@ function pushHistory() {
     history = history.slice(0, hIndex + 1);
     if (history[hIndex] !== snap) { history.push(snap); if (history.length > 60) history.shift(); hIndex = history.length - 1; }
     updateHistoryButtons();
+    saveSession();
 }
 function resetHistory() { history = [snapshot()]; hIndex = 0; updateHistoryButtons(); }
 function restoreHistory(dir) {
@@ -43,6 +44,38 @@ function ensureDefaults() {
         },
         { id: "name", type: "text", text: "Sample Name", x: CARD_W / 2, y: 330, fontSize: 48, fontFamily: "Arial", weight: 700, align: "center", rotation: 0, color: "#111111", name: "Name" }
     );
+}
+
+/* ====== Sessions ====== */
+const AUTOSAVE_KEY = "lcd_autosave_v1";
+function saveSession() {
+  try { localStorage.setItem(AUTOSAVE_KEY, snapshot()); } catch {}
+}
+function clearSession(){
+  try { localStorage.removeItem(AUTOSAVE_KEY); } catch {}
+}
+function loadSessionIfAny() {
+  try {
+    const s = localStorage.getItem(AUTOSAVE_KEY);
+    if (!s) return false;
+    const t = JSON.parse(s);
+    // quick sanity checks
+    if (!t || !t.elements || !t.style || !t.page) return false;
+    template = t;
+    selected = null;
+    syncStyleInputs();
+    redraw();
+    refreshInspector();
+    // Seed internal history from this restored snapshot
+    history = [snapshot()];
+    hIndex = 0;
+    updateHistoryButtons();
+    // Seed browser history too
+    try { window.history.replaceState({ idx: hIndex }, "", location.href); } catch {}
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 /* ====== Utils ====== */
@@ -290,7 +323,6 @@ function updatePatternUI() {
     color2Row.style.display = '';
   }
 }
-
 function syncStyleInputs() {
     document.getElementById('patternType').value = template.style.pattern.type;
     document.getElementById('color1').value = template.style.pattern.color1;
@@ -326,7 +358,6 @@ function syncStyleInputs() {
             redraw(selected ? selected.id : null); pushHistory();
         });
     });
-
 document.getElementById('logoFile').addEventListener('change', e => {
     const f = e.target.files[0]; if (!f) return;
     const reader = new FileReader();
@@ -337,7 +368,6 @@ document.getElementById('logoFile').addEventListener('change', e => {
     };
     reader.readAsDataURL(f);
 });
-
 document.getElementById('loadTemplate').addEventListener('change', e => {
     const f = e.target.files[0]; if (!f) return;
     const r = new FileReader();
@@ -352,13 +382,31 @@ document.getElementById('saveTemplate').onclick = () => {
     const url = URL.createObjectURL(blob); const a = document.createElement('a'); a.href = url; a.download = 'template.json'; a.click(); URL.revokeObjectURL(url);
 };
 document.getElementById('resetTemplate').onclick = () => {
-    if (!confirm("Reset to default layout and styles?")) return;
-    template = {
-        meta: { version: "1.4.0", created: new Date().toISOString() }, page: { cardWidthPx: CARD_W, cardHeightPx: CARD_H },
-        style: { pattern: { type: "none", color1: "#ffffff", color2: "#e2e8f0" }, border: { on: true, color: "#222222", thickness: 2 }, dropShadow: true, cornerRadius: 6 },
-        editor: { showGrid: true, gridSize: 20, snapToGrid: true }, elements: []
-    };
-    ensureDefaults(); selected = null; syncStyleInputs(); redraw(); refreshInspector(); resetHistory();
+  if (!confirm("Reset to default layout and styles?")) return;
+
+  // Rebuild defaults (your existing code)
+  template = {
+    meta: { version: "1.4.x", created: new Date().toISOString() },
+    page: { cardWidthPx: CARD_W, cardHeightPx: CARD_H },
+    style: {
+      pattern: { type: "none", color1: "#ffffff", color2: "#e2e8f0" },
+      border: { on: true, color: "#222222", thickness: 2 },
+      dropShadow: true,
+      cornerRadius: 6
+    },
+    editor: { showGrid: true, gridSize: 20, snapToGrid: true },
+    elements: []
+  };
+  ensureDefaults();           // keep your sample elements
+  selected = null;
+  syncStyleInputs();
+  redraw();
+  refreshInspector();
+  resetHistory();
+
+  // 🔄 wipe autosaved session and (optionally) save the clean default
+  clearSession();
+  saveSession();              // keep this if you want reload to match the just-reset state
 };
 
 document.getElementById('addText').onclick = () => {
@@ -479,5 +527,15 @@ document.getElementById('exportPDF').onclick = async () => {
 };
 
 /* ====== Init ====== */
-function init() { ensureDefaults(); syncStyleInputs(); redraw(); resetHistory(); }
+function init(){
+  if (!loadSessionIfAny()) {
+    ensureDefaults();
+    syncStyleInputs();
+    redraw();
+    resetHistory();
+    // seed browser history for the initial state
+    try { window.history.replaceState({ idx: hIndex }, "", location.href); } catch {}
+    saveSession();
+  }
+}
 init();
