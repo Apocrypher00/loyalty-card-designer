@@ -1,0 +1,131 @@
+:root {
+    --panel-w: 340px;
+    --bg: #f3f4f6
+}
+
+html,
+body {
+    height: 100%;
+    margin: 0;
+    font-family: Segoe UI, Arial, Helvetica, sans-serif;
+    background: var(--bg);
+    color: #111
+}
+
+header {
+    padding: 14px 20px;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, .06);
+    display: flex;
+    gap: 16px;
+    align-items: center
+}
+
+header h1 {
+    margin: 0;
+    font-size: 18px
+}
+
+#app {
+    display: flex;
+    gap: 18px;
+    padding: 18px
+}
+
+#panel {
+    width: var(--panel-w);
+    background: #fff;
+    border-radius: 8px;
+    padding: 12px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, .06);
+    height: calc(100vh - 110px);
+    overflow: auto
+}
+
+label {
+    display: block;
+    margin-top: 10px;
+    font-size: 13px
+}
+
+input[type=file],
+input[type=text],
+input[type=number],
+select,
+button {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px;
+    margin-top: 6px;
+    border-radius: 6px;
+    border: 1px solid #d1d5db
+}
+
+button {
+    cursor: pointer;
+    background: #111;
+    color: #fff;
+    border: none
+}
+
+button:disabled {
+    opacity: .45;
+    cursor: not-allowed
+}
+
+.btnRow {
+    display: flex;
+    gap: 8px
+}
+
+.btnRow>button {
+    flex: 1
+}
+
+.btnSub {
+    background: #374151
+}
+
+.btnWarn {
+    background: #b91c1c
+}
+
+.group {
+    border-top: 1px dashed #e5e7eb;
+    padding-top: 10px;
+    margin-top: 10px
+}
+
+.muted {
+    color: #6b7280;
+    font-size: 13px
+}
+
+.small {
+    font-size: 12px
+}
+
+#canvasWrap {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center
+}
+
+canvas {
+    background: #fff;
+    border-radius: 8px;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, .08)
+}
+
+.dpad {
+    display: grid;
+    grid-template-columns: 40px 40px 40px;
+    grid-template-rows: 40px 40px 40px;
+    gap: 6px;
+    justify-content: start
+}
+
+.dpad button {
+    padding: 0
+}
