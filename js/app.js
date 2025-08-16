@@ -372,63 +372,89 @@ document.getElementById('loadCSV').addEventListener('change', e => {
 
 /* ====== Export PDF ====== */
 document.getElementById('exportPDF').onclick = async () => {
-    const { jsPDF } = window.jspdf;
+  const { jsPDF } = window.jspdf;
 
-    // 🔧 Temporarily hide editor-only visuals during export
-    const prevShowGrid = template.editor.showGrid;
-    template.editor.showGrid = false;
-    const restore = () => {
-        template.editor.showGrid = prevShowGrid;
-        redraw(selected ? selected.id : null);
-    };
+  // Hide editor-only visuals during export (grid, etc.)
+  const prevShowGrid = template.editor.showGrid;
+  template.editor.showGrid = false;
+  const restore = () => { template.editor.showGrid = prevShowGrid; redraw(selected ? selected.id : null); };
 
-    try {
-        const pdf = new jsPDF({ orientation: "landscape", unit: "pt", format: "letter" });
-        const cols = 2, rows = 5, perPage = cols * rows, cardWpt = 3.5 * 72, cardHpt = 2 * 72, margin = 36;
-        const records = csvData.length ? csvData : [{ name: "Sample Name", phone: "5551234567" }];
+  try {
+    // ----- PAGE & CARD METRICS (Portrait Letter) -----
+    const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "letter" });
+    const pageW = pdf.internal.pageSize.getWidth();   // 612 pt
+    const pageH = pdf.internal.pageSize.getHeight();  // 792 pt
 
-        for (let i = 0; i < records.length; i++) {
-            if (i > 0 && i % perPage === 0) pdf.addPage();
+    // Business card size (3.5" x 2")
+    const cardWpt = 3.5 * 72;
+    const cardHpt = 2.0 * 72;
 
-            // Set record into template
-            const backup = JSON.parse(JSON.stringify(template.elements));
-            const nameEl = template.elements.find(e => e.type === "text" && (e.id === "name" || (e.name || "").toLowerCase().includes("name")));
-            const bcEl = template.elements.find(e => e.type === "barcode");
-            if (nameEl) nameEl.text = records[i].name;
-            if (bcEl) { bcEl.value = records[i].phone; bcEl._qr = null; }
+    // Margins (0.5")
+    const margin = 36;
 
-            // Pre-render QR if needed (Code128 is instant)
-            for (const b of template.elements.filter(e => e.type === "barcode" && e.format === "QR")) {
-                await ensureQRCache(b);
-            }
+    // How many columns/rows fit (without grid)
+    const usableW = pageW - 2 * margin;
+    const usableH = pageH - 2 * margin;
+    const fitCols  = Math.max(1, Math.floor(usableW / cardWpt));
+    const fitRows  = Math.max(1, Math.floor(usableH / cardHpt));
+    const perPage  = fitCols * fitRows;
 
-            // Redraw *without* grid, then snapshot
-            redraw();
-            const data = canvas.toDataURL("image/png");
+    // Distribute extra space as gutters across (fit+1) gaps for equal outer margins
+    const extraW   = usableW - fitCols * cardWpt;
+    const extraH   = usableH - fitRows * cardHpt;
+    const gutterX  = extraW / (fitCols + 1);
+    const gutterY  = extraH / (fitRows + 1);
 
-            // Place onto page
-            const idx = i % perPage, c = idx % cols, r = Math.floor(idx / cols);
-            const x = margin + c * cardWpt, y = margin + r * cardHpt;
-            pdf.addImage(data, "PNG", x, y, cardWpt, cardHpt);
+    // Data (fallback sample)
+    const records = csvData.length
+      ? csvData
+      : [{ name: "Sample Name", phone: "5551234567" }];
 
-            // Crop marks
-            pdf.setDrawColor(0); pdf.setLineWidth(.5);
-            const mm = 6;
-            pdf.line(x - mm, y, x - mm - 10, y); pdf.line(x, y - mm, x, y - mm - 10);
-            pdf.line(x + cardWpt + mm, y, x + cardWpt + mm + 10, y); pdf.line(x + cardWpt, y - mm, x + cardWpt, y - mm - 10);
-            pdf.line(x - mm, y + cardHpt, x - mm - 10, y + cardHpt); pdf.line(x, y + cardHpt + mm, x, y + cardHpt + mm + 10);
-            pdf.line(x + cardWpt + mm, y + cardHpt, x + cardWpt + mm + 10, y + cardHpt); pdf.line(x + cardWpt, y + cardHpt + mm, x + cardWpt, y + cardHpt + mm + 10);
+    for (let i = 0; i < records.length; i++) {
+      if (i > 0 && i % perPage === 0) pdf.addPage();
 
-            // Restore elements for next record
-            template.elements = backup;
-            redraw(); // still grid-off for the duration of export
-        }
+      // Apply record into template
+      const backup = JSON.parse(JSON.stringify(template.elements));
+      const nameEl = template.elements.find(e => e.type === "text" && (e.id === "name" || (e.name || "").toLowerCase().includes("name")));
+      const bcEl   = template.elements.find(e => e.type === "barcode");
+      if (nameEl) nameEl.text = records[i].name;
+      if (bcEl)  { bcEl.value = records[i].phone; bcEl._qr = null; }
 
-        pdf.save("cards.pdf");
-    } finally {
-        // ✅ Restore whatever the user had (grid on/off)
-        restore();
+      // Pre-render QR caches if needed (Code128 is instant)
+      for (const b of template.elements.filter(e => e.type === "barcode" && e.format === "QR")) {
+        await ensureQRCache(b);
+      }
+
+      // Redraw without grid and snapshot card
+      redraw();
+      const cardPng = canvas.toDataURL("image/png");
+
+      // Position on page with equal margins (portrait)
+      const idx = i % perPage;
+      const c = idx % fitCols;
+      const r = Math.floor(idx / fitCols);
+      const x = margin + (c + 1) * gutterX + c * cardWpt;
+      const y = margin + (r + 1) * gutterY + r * cardHpt;
+
+      pdf.addImage(cardPng, "PNG", x, y, cardWpt, cardHpt);
+
+      // Crop marks
+      pdf.setDrawColor(0); pdf.setLineWidth(.5);
+      const mm = 6;
+      pdf.line(x - mm, y, x - mm - 10, y);           pdf.line(x, y - mm, x, y - mm - 10);
+      pdf.line(x + cardWpt + mm, y, x + cardWpt + mm + 10, y); pdf.line(x + cardWpt, y - mm, x + cardWpt, y - mm - 10);
+      pdf.line(x - mm, y + cardHpt, x - mm - 10, y + cardHpt); pdf.line(x, y + cardHpt + mm, x, y + cardHpt + mm + 10);
+      pdf.line(x + cardWpt + mm, y + cardHpt, x + cardWpt + mm + 10, y + cardHpt); pdf.line(x + cardWpt, y + cardHpt + mm, x + cardWpt, y + cardHpt + mm + 10);
+
+      // Restore for next record
+      template.elements = backup;
+      redraw(); // grid still off during export
     }
+
+    pdf.save("cards.pdf");
+  } finally {
+    restore(); // put grid back as the user had it
+  }
 };
 
 /* ====== Init ====== */
