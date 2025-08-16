@@ -271,6 +271,26 @@ window.addEventListener('keydown', e => {
 });
 
 /* ====== Controls & IO ====== */
+function updatePatternUI() {
+  const type = document.getElementById('patternType').value;
+  const color1Row = document.getElementById('color1Row');
+  const color2Row = document.getElementById('color2Row');
+
+  if (type === 'none') {
+    // Hide both color pickers
+    color1Row.style.display = 'none';
+    color2Row.style.display = 'none';
+  } else if (type === 'solid') {
+    // Show only Color 1
+    color1Row.style.display = '';
+    color2Row.style.display = 'none';
+  } else {
+    // gradient/stripes/dots → show both
+    color1Row.style.display = '';
+    color2Row.style.display = '';
+  }
+}
+
 function syncStyleInputs() {
     document.getElementById('patternType').value = template.style.pattern.type;
     document.getElementById('color1').value = template.style.pattern.color1;
@@ -283,12 +303,16 @@ function syncStyleInputs() {
     document.getElementById('gridSize').value = template.editor.gridSize;
     document.getElementById('snapToGrid').checked = template.editor.snapToGrid;
     document.getElementById('showGrid').checked = template.editor.showGrid;
+    updatePatternUI();
 }
 ['patternType', 'color1', 'color2', 'borderOn', 'borderColor', 'borderThickness', 'dropShadow', 'cornerRadius', 'gridSize', 'snapToGrid', 'showGrid']
     .forEach(id => {
         const el = document.getElementById(id);
         el.addEventListener('change', () => {
-            if (id === 'patternType') template.style.pattern.type = el.value;
+            if (id === 'patternType') {
+                template.style.pattern.type = el.value;
+                updatePatternUI();
+            }
             else if (id === 'color1') template.style.pattern.color1 = el.value;
             else if (id === 'color2') template.style.pattern.color2 = el.value;
             else if (id === 'borderOn') template.style.border.on = el.checked;

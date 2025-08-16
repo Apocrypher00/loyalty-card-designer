@@ -58,6 +58,7 @@
 
       <div class="group">
         <label>Background / Style</label>
+
         <select id="patternType">
           <option value="none">None</option>
           <option value="solid">Solid color</option>
@@ -65,9 +66,18 @@
           <option value="stripes">Stripes</option>
           <option value="dots">Dots</option>
         </select>
-        <label>Color 1 <input id="color1" type="color" value="#ffffff" /></label>
-        <label>Color 2 <input id="color2" type="color" value="#e2e8f0" /></label>
-        <label style="margin-top:8px"><input id="borderOn" type="checkbox" /> Show card border</label>
+
+        <label id="color1Row">Color 1
+          <input id="color1" type="color" value="#ffffff" />
+        </label>
+
+        <label id="color2Row">Color 2
+          <input id="color2" type="color" value="#e2e8f0" />
+        </label>
+
+        <label style="margin-top:8px">
+          <input id="borderOn" type="checkbox" /> Show card border
+        </label>
         <label>Border color <input id="borderColor" type="color" value="#000000" /></label>
         <label>Border thickness <input id="borderThickness" type="number" value="2" min="0" max="12" /></label>
         <label style="margin-top:8px">Drop shadow <input id="dropShadow" type="checkbox" /></label>
