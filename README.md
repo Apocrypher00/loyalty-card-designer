@@ -19,6 +19,12 @@ A zero-install, browser-only tool to design wallet-size loyalty cards and export
 5. Position elements, set background/borders.
 6. Export PDF.
 
+## Provenance
+
+This project is **almost 100% AI-generated** and iteratively refined with human feedback.
+While it’s been tested to work for typical cases, use your own judgment for production runs.
+Pull requests and human reviews are welcome.
+
 ## GitHub Pages
 
 1. Create a new repo and push these files.
