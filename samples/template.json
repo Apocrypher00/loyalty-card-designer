@@ -1,16 +1,76 @@
 {
-  "meta": { "version": "1.4.0", "created": "2025-08-15T00:00:00Z" },
-  "page": { "cardWidthPx": 1050, "cardHeightPx": 600 },
+  "meta": {
+    "version": "1.4.0",
+    "created": "2025-08-15T00:00:00Z"
+  },
+  "page": {
+    "cardWidthPx": 1050,
+    "cardHeightPx": 600
+  },
   "style": {
-    "pattern": { "type": "none", "color1": "#ffffff", "color2": "#e2e8f0" },
-    "border": { "on": true, "color": "#222222", "thickness": 2 },
+    "pattern": {
+      "type": "none",
+      "color1": "#ffffff",
+      "color2": "#e2e8f0"
+    },
+    "border": {
+      "on": true,
+      "color": "#222222",
+      "thickness": 2
+    },
     "dropShadow": true,
     "cornerRadius": 6
   },
-  "editor": { "showGrid": true, "gridSize": 20, "snapToGrid": true, "editMode": true },
+  "editor": {
+    "showGrid": true,
+    "gridSize": 20,
+    "snapToGrid": true,
+    "editMode": true
+  },
   "elements": [
-    { "id": "logo", "type": "image", "src": "your-logo.png", "x": 525, "y": 120, "w": 520, "h": 160, "scale": 1, "rotation": 0, "name": "Logo" },
-    { "id": "barcode", "type": "barcode", "value": "5551234567", "x": 525, "y": 470, "w": 520, "h": 70, "scale": 1, "rotation": 0, "format": "CODE128", "showText": true, "linkedText": true, "textColor": "#000000", "fontSize": 20, "name": "Barcode" },
-    { "id": "name", "type": "text", "text": "Sample Name", "x": 525, "y": 330, "fontSize": 48, "fontFamily": "Arial", "weight": 700, "align": "center", "rotation": 0, "color": "#111111", "name": "Name" }
+    {
+      "id": "logo",
+      "type": "image",
+      "src": "your-logo.png",
+      "x": 520,
+      "y": 140,
+      "w": 644,
+      "h": 233,
+      "scale": 1,
+      "rotation": 0,
+      "name": "Logo"
+    },
+    {
+      "id": "barcode",
+      "type": "barcode",
+      "value": "5550000001",
+      "x": 525,
+      "y": 470,
+      "w": 520,
+      "h": 70,
+      "scale": 1,
+      "rotation": 0,
+      "format": "CODE128",
+      "showText": true,
+      "linkedText": true,
+      "textColor": "#000000",
+      "fontSize": 20,
+      "name": "Barcode",
+      "_qr": null
+    },
+    {
+      "id": "name",
+      "type": "text",
+      "text": "Alex Johnson",
+      "x": 520,
+      "y": 360,
+      "fontSize": 48,
+      "fontFamily": "Arial",
+      "weight": 700,
+      "align": "center",
+      "rotation": 0,
+      "color": "#111111",
+      "name": "Name"
+    }
   ]
 }

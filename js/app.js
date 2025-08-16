@@ -12,7 +12,7 @@ let template = {
     meta: { version: "1.4.0", created: new Date().toISOString() },
     page: { cardWidthPx: CARD_W, cardHeightPx: CARD_H },
     style: { pattern: { type: "none", color1: "#ffffff", color2: "#e2e8f0" }, border: { on: true, color: "#222222", thickness: 2 }, dropShadow: true, cornerRadius: 6 },
-    editor: { showGrid: true, gridSize: 20, snapToGrid: true, editMode: true },
+    editor: { showGrid: true, gridSize: 20, snapToGrid: true },
     elements: []
 };
 
@@ -159,7 +159,6 @@ function hitTest(x, y) {
 
 /* ====== Interaction ====== */
 canvas.addEventListener('mousedown', ev => {
-    if (!template.editor.editMode) return;
     const p = toCanvas(ev), hit = hitTest(p.x, p.y);
     if (!hit) { selected = null; redraw(); refreshInspector(); return; }
     selected = hit.el; refreshInspector(); redraw(selected.id);
@@ -284,9 +283,8 @@ function syncStyleInputs() {
     document.getElementById('gridSize').value = template.editor.gridSize;
     document.getElementById('snapToGrid').checked = template.editor.snapToGrid;
     document.getElementById('showGrid').checked = template.editor.showGrid;
-    document.getElementById('editMode').checked = template.editor.editMode;
 }
-['patternType', 'color1', 'color2', 'borderOn', 'borderColor', 'borderThickness', 'dropShadow', 'cornerRadius', 'gridSize', 'snapToGrid', 'showGrid', 'editMode']
+['patternType', 'color1', 'color2', 'borderOn', 'borderColor', 'borderThickness', 'dropShadow', 'cornerRadius', 'gridSize', 'snapToGrid', 'showGrid']
     .forEach(id => {
         const el = document.getElementById(id);
         el.addEventListener('change', () => {
@@ -301,7 +299,6 @@ function syncStyleInputs() {
             else if (id === 'gridSize') template.editor.gridSize = parseInt(el.value) || 20;
             else if (id === 'snapToGrid') template.editor.snapToGrid = el.checked;
             else if (id === 'showGrid') { template.editor.showGrid = el.checked; redraw(selected ? selected.id : null); }
-            else if (id === 'editMode') template.editor.editMode = el.checked;
             redraw(selected ? selected.id : null); pushHistory();
         });
     });
@@ -335,7 +332,7 @@ document.getElementById('resetTemplate').onclick = () => {
     template = {
         meta: { version: "1.4.0", created: new Date().toISOString() }, page: { cardWidthPx: CARD_W, cardHeightPx: CARD_H },
         style: { pattern: { type: "none", color1: "#ffffff", color2: "#e2e8f0" }, border: { on: true, color: "#222222", thickness: 2 }, dropShadow: true, cornerRadius: 6 },
-        editor: { showGrid: true, gridSize: 20, snapToGrid: true, editMode: true }, elements: []
+        editor: { showGrid: true, gridSize: 20, snapToGrid: true }, elements: []
     };
     ensureDefaults(); selected = null; syncStyleInputs(); redraw(); refreshInspector(); resetHistory();
 };
@@ -372,89 +369,89 @@ document.getElementById('loadCSV').addEventListener('change', e => {
 
 /* ====== Export PDF ====== */
 document.getElementById('exportPDF').onclick = async () => {
-  const { jsPDF } = window.jspdf;
+    const { jsPDF } = window.jspdf;
 
-  // Hide editor-only visuals during export (grid, etc.)
-  const prevShowGrid = template.editor.showGrid;
-  template.editor.showGrid = false;
-  const restore = () => { template.editor.showGrid = prevShowGrid; redraw(selected ? selected.id : null); };
+    // Hide editor-only visuals during export (grid, etc.)
+    const prevShowGrid = template.editor.showGrid;
+    template.editor.showGrid = false;
+    const restore = () => { template.editor.showGrid = prevShowGrid; redraw(selected ? selected.id : null); };
 
-  try {
-    // ----- PAGE & CARD METRICS (Portrait Letter) -----
-    const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "letter" });
-    const pageW = pdf.internal.pageSize.getWidth();   // 612 pt
-    const pageH = pdf.internal.pageSize.getHeight();  // 792 pt
+    try {
+        // ----- PAGE & CARD METRICS (Portrait Letter) -----
+        const pdf = new jsPDF({ orientation: "portrait", unit: "pt", format: "letter" });
+        const pageW = pdf.internal.pageSize.getWidth();   // 612 pt
+        const pageH = pdf.internal.pageSize.getHeight();  // 792 pt
 
-    // Business card size (3.5" x 2")
-    const cardWpt = 3.5 * 72;
-    const cardHpt = 2.0 * 72;
+        // Business card size (3.5" x 2")
+        const cardWpt = 3.5 * 72;
+        const cardHpt = 2.0 * 72;
 
-    // Margins (0.5")
-    const margin = 36;
+        // Margins (0.5")
+        const margin = 36;
 
-    // How many columns/rows fit (without grid)
-    const usableW = pageW - 2 * margin;
-    const usableH = pageH - 2 * margin;
-    const fitCols  = Math.max(1, Math.floor(usableW / cardWpt));
-    const fitRows  = Math.max(1, Math.floor(usableH / cardHpt));
-    const perPage  = fitCols * fitRows;
+        // How many columns/rows fit (without grid)
+        const usableW = pageW - 2 * margin;
+        const usableH = pageH - 2 * margin;
+        const fitCols = Math.max(1, Math.floor(usableW / cardWpt));
+        const fitRows = Math.max(1, Math.floor(usableH / cardHpt));
+        const perPage = fitCols * fitRows;
 
-    // Distribute extra space as gutters across (fit+1) gaps for equal outer margins
-    const extraW   = usableW - fitCols * cardWpt;
-    const extraH   = usableH - fitRows * cardHpt;
-    const gutterX  = extraW / (fitCols + 1);
-    const gutterY  = extraH / (fitRows + 1);
+        // Distribute extra space as gutters across (fit+1) gaps for equal outer margins
+        const extraW = usableW - fitCols * cardWpt;
+        const extraH = usableH - fitRows * cardHpt;
+        const gutterX = extraW / (fitCols + 1);
+        const gutterY = extraH / (fitRows + 1);
 
-    // Data (fallback sample)
-    const records = csvData.length
-      ? csvData
-      : [{ name: "Sample Name", phone: "5551234567" }];
+        // Data (fallback sample)
+        const records = csvData.length
+            ? csvData
+            : [{ name: "Sample Name", phone: "5551234567" }];
 
-    for (let i = 0; i < records.length; i++) {
-      if (i > 0 && i % perPage === 0) pdf.addPage();
+        for (let i = 0; i < records.length; i++) {
+            if (i > 0 && i % perPage === 0) pdf.addPage();
 
-      // Apply record into template
-      const backup = JSON.parse(JSON.stringify(template.elements));
-      const nameEl = template.elements.find(e => e.type === "text" && (e.id === "name" || (e.name || "").toLowerCase().includes("name")));
-      const bcEl   = template.elements.find(e => e.type === "barcode");
-      if (nameEl) nameEl.text = records[i].name;
-      if (bcEl)  { bcEl.value = records[i].phone; bcEl._qr = null; }
+            // Apply record into template
+            const backup = JSON.parse(JSON.stringify(template.elements));
+            const nameEl = template.elements.find(e => e.type === "text" && (e.id === "name" || (e.name || "").toLowerCase().includes("name")));
+            const bcEl = template.elements.find(e => e.type === "barcode");
+            if (nameEl) nameEl.text = records[i].name;
+            if (bcEl) { bcEl.value = records[i].phone; bcEl._qr = null; }
 
-      // Pre-render QR caches if needed (Code128 is instant)
-      for (const b of template.elements.filter(e => e.type === "barcode" && e.format === "QR")) {
-        await ensureQRCache(b);
-      }
+            // Pre-render QR caches if needed (Code128 is instant)
+            for (const b of template.elements.filter(e => e.type === "barcode" && e.format === "QR")) {
+                await ensureQRCache(b);
+            }
 
-      // Redraw without grid and snapshot card
-      redraw();
-      const cardPng = canvas.toDataURL("image/png");
+            // Redraw without grid and snapshot card
+            redraw();
+            const cardPng = canvas.toDataURL("image/png");
 
-      // Position on page with equal margins (portrait)
-      const idx = i % perPage;
-      const c = idx % fitCols;
-      const r = Math.floor(idx / fitCols);
-      const x = margin + (c + 1) * gutterX + c * cardWpt;
-      const y = margin + (r + 1) * gutterY + r * cardHpt;
+            // Position on page with equal margins (portrait)
+            const idx = i % perPage;
+            const c = idx % fitCols;
+            const r = Math.floor(idx / fitCols);
+            const x = margin + (c + 1) * gutterX + c * cardWpt;
+            const y = margin + (r + 1) * gutterY + r * cardHpt;
 
-      pdf.addImage(cardPng, "PNG", x, y, cardWpt, cardHpt);
+            pdf.addImage(cardPng, "PNG", x, y, cardWpt, cardHpt);
 
-      // Crop marks
-      pdf.setDrawColor(0); pdf.setLineWidth(.5);
-      const mm = 6;
-      pdf.line(x - mm, y, x - mm - 10, y);           pdf.line(x, y - mm, x, y - mm - 10);
-      pdf.line(x + cardWpt + mm, y, x + cardWpt + mm + 10, y); pdf.line(x + cardWpt, y - mm, x + cardWpt, y - mm - 10);
-      pdf.line(x - mm, y + cardHpt, x - mm - 10, y + cardHpt); pdf.line(x, y + cardHpt + mm, x, y + cardHpt + mm + 10);
-      pdf.line(x + cardWpt + mm, y + cardHpt, x + cardWpt + mm + 10, y + cardHpt); pdf.line(x + cardWpt, y + cardHpt + mm, x + cardWpt, y + cardHpt + mm + 10);
+            // Crop marks
+            pdf.setDrawColor(0); pdf.setLineWidth(.5);
+            const mm = 6;
+            pdf.line(x - mm, y, x - mm - 10, y); pdf.line(x, y - mm, x, y - mm - 10);
+            pdf.line(x + cardWpt + mm, y, x + cardWpt + mm + 10, y); pdf.line(x + cardWpt, y - mm, x + cardWpt, y - mm - 10);
+            pdf.line(x - mm, y + cardHpt, x - mm - 10, y + cardHpt); pdf.line(x, y + cardHpt + mm, x, y + cardHpt + mm + 10);
+            pdf.line(x + cardWpt + mm, y + cardHpt, x + cardWpt + mm + 10, y + cardHpt); pdf.line(x + cardWpt, y + cardHpt + mm, x + cardWpt, y + cardHpt + mm + 10);
 
-      // Restore for next record
-      template.elements = backup;
-      redraw(); // grid still off during export
+            // Restore for next record
+            template.elements = backup;
+            redraw(); // grid still off during export
+        }
+
+        pdf.save("cards.pdf");
+    } finally {
+        restore(); // put grid back as the user had it
     }
-
-    pdf.save("cards.pdf");
-  } finally {
-    restore(); // put grid back as the user had it
-  }
 };
 
 /* ====== Init ====== */
